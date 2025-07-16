@@ -6,7 +6,6 @@ services:
     container_name: goal-reminder-bot
     ports:
       - "3000:3000"
-    env_file: .env
     environment:
       - TZ=Asia/Kolkata
       - BOT_TOKEN=7576181421:AAH_pmVimWYuAdW9KSZ94AcuBhtG504XmrA
