@@ -1,10 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Goal Reminder Bot</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="favicon.ico">
+  <style>
+    body.dark {
+      background-color: #1a202c;
+      color: #f7fafc;
+    }
+  </style>
 </head>
-<body>
-  <h1>Goal Reminder Bot</h1>
-  <p>Welcome to the goal tracking interface!</p>
+<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col items-center p-4">
+  <button id="darkToggle" class="fixed top-4 right-4 bg-black text-white px-3 py-1 rounded">🌙</button>
+  <audio id="bg-music" src="/media/bg.mp3" autoplay loop></audio>
+  <audio id="ding" src="/media/ding.mp3"></audio>
+
+  <h1 class="text-3xl font-bold mb-4">🎯 Goal Reminder Bot</h1>
+
+  <form id="goalForm" class="flex flex-col gap-2 w-full max-w-md">
+    <input class="p-2 rounded border" type="text" id="text" placeholder="Enter your goal..." required>
+    <select class="p-2 rounded border" id="category">
+      <option value="🏃 Health">🏃 Health</option>
+      <option value="💼 Work">💼 Work</option>
+      <option value="👤 Personal">👤 Personal</option>
+    </select>
+    <label class="inline-flex items-center">
+      <input type="checkbox" id="recurring" class="mr-2"> Recurring
+    </label>
+    <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">➕ Add Goal</button>
+  </form>
+
+  <h2 class="text-xl font-semibold mt-8 mb-2">📋 Your Goals</h2>
+  <div id="goals" class="grid gap-2 w-full max-w-md"></div>
+
+  <canvas id="goalChart" class="my-6 w-full max-w-md"></canvas>
+
+  <script>
+    const ding = document.getElementById('ding');
+
+    document.getElementById('goalForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = document.getElementById('text').value;
+      const category = document.getElementById('category').value;
+      const recurring = document.getElementById('recurring').checked;
+      const res = await fetch('/api/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, category, recurring })
+      });
+      if (res.ok) {
+        ding.play();
+        loadGoals();
+        document.getElementById('goalForm').reset();
+      }
+    });
+
+    async function loadGoals() {
+      const res = await fetch('/api/goals');
+      const goals = await res.json();
+      const container = document.getElementById('goals');
+      container.innerHTML = '';
+
+      let completed = 0;
+      goals.forEach(goal => {
+        const div = document.createElement('div');
+        div.className = 'p-3 rounded shadow bg-white flex justify-between items-center';
+        div.innerHTML = `<span>${goal.category} ${goal.text}</span>
+          <div>
+            <button onclick="completeGoal('${goal.id}')" class="text-green-500">✔️</button>
+            <button onclick="deleteGoal('${goal.id}')" class="text-red-500 ml-2">🗑️</button>
+          </div>`;
+        container.appendChild(div);
+        if (goal.completed) completed++;
+      });
+
+      const pending = goals.length - completed;
+      renderChart(pending, completed);
+    }
+
+    async function completeGoal(id) {
+      await fetch(`/api/goals/${id}/complete`, { method: 'PATCH' });
+      loadGoals();
+    }
+
+    async function deleteGoal(id) {
+      await fetch(`/api/goals/${id}`, { method: 'DELETE' });
+      loadGoals();
+    }
+
+    function renderChart(pending, completed) {
+      const ctx = document.getElementById('goalChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Pending', 'Completed'],
+          datasets: [{
+            data: [pending, completed],
+            backgroundColor: ['#fbbf24', '#10b981']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    document.getElementById('darkToggle').addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+    });
+
+    loadGoals();
+  </script>
 </body>
 </html>
