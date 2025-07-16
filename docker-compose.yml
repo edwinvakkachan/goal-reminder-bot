@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  goalbot:
+    build: .
+    container_name: goal-reminder-bot
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      - TZ=Asia/Kolkata
+    volumes:
+      - goals-data:/app/goals.json
+      - history-data:/app/history.json
+    restart: unless-stopped
+
+volumes:
+  goals-data:
+    driver: local
+  history-data:
+    driver: local
