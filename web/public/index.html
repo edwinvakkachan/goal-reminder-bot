@@ -18,7 +18,7 @@
   <button id="darkToggle" class="fixed top-4 right-24 bg-black text-white px-3 py-1 rounded">🌙</button>
   <button id="musicToggle" class="fixed top-4 right-4 bg-blue-700 text-white px-3 py-1 rounded">🔊</button>
 
-  <audio id="bg-music" src="/media/bg.mp3" autoplay loop></audio>
+  <audio id="bg-music" src="/media/bg.mp3" loop></audio>
   <audio id="ding" src="/media/ding.mp3"></audio>
 
   <h1 class="text-3xl font-bold mb-4">🎯 Goal Reminder Bot</h1>
@@ -60,7 +60,7 @@
   <script>
     const ding = document.getElementById('ding');
     const music = document.getElementById('bg-music');
-    let musicPlaying = true;
+    let musicPlaying = false;
 
     document.getElementById('musicToggle').addEventListener('click', () => {
       if (musicPlaying) {
@@ -153,12 +153,18 @@
           labels: ['Pending', 'Completed'],
           datasets: [{
             data: [pending, completed],
-            backgroundColor: ['#fbbf24', '#10b981']
+            backgroundColor: ['#f59e0b', '#10b981']
           }]
         },
         options: {
           responsive: true,
-          plugins: { legend: { position: 'bottom' } }
+          plugins: {
+            legend: { position: 'bottom' },
+            title: {
+              display: true,
+              text: `Goal Summary: ${completed} Completed, ${pending} Pending`
+            }
+          }
         }
       });
     }
@@ -182,9 +188,15 @@
     document.getElementById('filterCategory').addEventListener('change', loadGoals);
 
     window.addEventListener('DOMContentLoaded', () => {
-      music.play();
       loadQuote();
       loadGoals();
+      setTimeout(() => {
+        music.play().then(() => {
+          musicPlaying = true;
+        }).catch(() => {
+          console.warn("🔇 Music autoplay blocked by browser");
+        });
+      }, 500);
     });
   </script>
 </body>
