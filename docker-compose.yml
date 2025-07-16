@@ -8,8 +8,8 @@ services:
       - "3000:3000"
     environment:
       - TZ=Asia/Kolkata
-      - ADMIN_USER=admin
-      - ADMIN_PASS=password
+      - ADMIN_USER=${ADMIN_USER}
+      - ADMIN_PASS=${ADMIN_PASS}
       - PORT=3000
     volumes:
       - appdata:/app/data
@@ -20,8 +20,8 @@ services:
     container_name: goal-reminder-bot
     environment:
       - TZ=Asia/Kolkata
-      - BOT_TOKEN=7576181421:AAH_pmVimWYuAdW9KSZ94AcuBhtG504XmrA
-      - CHAT_ID=6501087487
+      - BOT_TOKEN=${BOT_TOKEN}
+      - CHAT_ID=${CHAT_ID}
     volumes:
       - appdata:/app/data
     restart: unless-stopped
