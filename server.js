@@ -75,4 +75,21 @@ app.delete('/api/goals/:id', (req, res) => {
 // Mark a goal as complete and move to history
 app.patch('/api/goals/:id/complete', (req, res) => {
   let goals = loadJSON(goalsPath);
-  co
+  const history = loadJSON(historyPath);
+  const index = goals.findIndex(g => g.id === req.params.id);
+  if (index === -1) return res.status(404).json({ error: 'Not found' });
+
+  const goal = goals.splice(index, 1)[0];
+  goal.completed = true;
+  goal.completedAt = new Date().toISOString();
+
+  saveJSON(goalsPath, goals);
+  history.push(goal);
+  saveJSON(historyPath, history);
+  res.json({ message: 'Marked completed and moved to history' });
+});
+
+// ✅ Start the server
+app.listen(port, () => {
+  console.log(`✅ Server running at http://localhost:${port}`);
+});
