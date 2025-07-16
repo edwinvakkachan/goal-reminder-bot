@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎯 Goal Reminder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+    <audio id="bg-music" src="/bg-music.mp3" autoplay loop hidden></audio>
+<button id="toggle-music" class="bg-yellow-400 px-3 py-1 rounded">
+  🎶 Toggle Music
+</button>
+
+  <div class="max-w-3xl mx-auto py-8 px-4">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">🎯 Goal Reminder</h1>
+      <button id="toggle-theme" class="bg-gray-800 text-white px-4 py-2 rounded">🌓 Toggle Theme</button>
+    </div>
+
+    <form id="goal-form" class="flex flex-col md:flex-row gap-2 mb-6">
+      <input type="text" id="text" placeholder="Enter your goal..." class="flex-1 px-4 py-2 rounded border border-gray-300 dark:bg-gray-800">
+      <select id="category" class="px-4 py-2 rounded border border-gray-300 dark:bg-gray-800">
+        <option>🏃 Health</option>
+        <option>📚 Education</option>
+        <option>👤 Personal</option>
+        <option>💼 Work</option>
+      </select>
+      <label class="flex items-center space-x-2 text-sm">
+        <input type="checkbox" id="recurring">
+        <span>Recurring</span>
+      </label>
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">➕ Add</button>
+    </form>
+
+    <div class="mb-4">
+      <label for="filter-category" class="block mb-1">Filter by category:</label>
+      <select id="filter-category" class="px-4 py-2 rounded border border-gray-300 dark:bg-gray-800">
+        <option value="">All</option>
+        <option>🏃 Health</option>
+        <option>📚 Education</option>
+        <option>👤 Personal</option>
+        <option>💼 Work</option>
+      </select>
+    </div>
+
+    <ul id="goal-list" class="space-y-4 mb-8"></ul>
+
+    <canvas id="goal-chart" class="mb-8"></canvas>
+    <audio id="ding" src="/ding.mp3"></audio>
+  </div>
+
+  <script>
+    const categoryIcons = {
+      '🏃 Health': '🏃',
+      '📚 Education': '📚',
+      '👤 Personal': '👤',
+      '💼 Work': '💼'
+    };
+
+    document.getElementById("toggle-theme").onclick = () => {
+      document.documentElement.classList.toggle("dark");
+    };
+
+    async function fetchGoals() {
+      const category = document.getElementById('filter-category').value;
+      const res = await fetch('/api/goals' + (category ? `?category=${category}` : ''));
+      const goals = await res.json();
+      const list = document.getElementById('goal-list');
+      list.innerHTML = '';
+
+      let completed = 0;
+      goals.forEach(goal => {
+        const icon = categoryIcons[goal.category] || '🎯';
+        const li = document.createElement('li');
+        li.className = "p-4 rounded-lg bg-white dark:bg-gray-800 shadow flex justify-between items-center";
+        li.innerHTML = `
+          <div>
+            <span class="text-xl">${icon}</span>
+            <strong class="ml-2">[${goal.category}]</strong>
+            <span class="ml-1 ${goal.completed ? 'line-through text-green-500' : ''}">${goal.text}</span>
+            ${goal.recurring ? '<span class="ml-2 text-xs text-purple-500">🔁 Recurring</span>' : ''}
+          </div>
+          <div class="flex space-x-2">
+            <button onclick="completeGoal('${goal.id}')" class="text-green-600">✅</button>
+            <button onclick="deleteGoal('${goal.id}')" class="text-red-600">🗑️</button>
+          </div>
+        `;
+        list.appendChild(li);
+        if (goal.completed) completed++;
+      });
+
+      // Chart update
+      const ctx = document.getElementById('goal-chart').getContext('2d');
+      if (window.myChart) window.myChart.destroy();
+      window.myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Completed', 'Pending'],
+          datasets: [{
+            data: [completed, goals.length - completed],
+            backgroundColor: ['#22c55e', '#f97316']
+          }]
+        }
+      });
+    }
+
+    async function completeGoal(id) {
+      await fetch(`/api/goals/${id}/complete`, { method: 'PATCH' });
+      document.getElementById("ding").play();
+      fetchGoals();
+    }
+
+    async function deleteGoal(id) {
+      await fetch(`/api/goals/${id}`, { method: 'DELETE' });
+      fetchGoals();
+    }
+
+    document.getElementById('goal-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = document.getElementById('text').value;
+      const category = document.getElementById('category').value;
+      const recurring = document.getElementById('recurring').checked;
+      await fetch('/api/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, category, recurring })
+      });
+      document.getElementById('text').value = '';
+      fetchGoals();
+    });
+
+    document.getElementById('filter-category').addEventListener('change', fetchGoals);
+    fetchGoals();
+
+    //music files
+
+    const bgMusic = document.getElementById('bg-music');
+const toggleBtn = document.getElementById('toggle-music');
+
+toggleBtn.addEventListener('click', () => {
+  if (bgMusic.paused) {
+    bgMusic.play();
+    toggleBtn.innerText = '🔇 Pause Music';
+  } else {
+    bgMusic.pause();
+    toggleBtn.innerText = '🎶 Play Music';
+  }
+});
+//music file ends here
+  </script>
+</body>
+</html>
