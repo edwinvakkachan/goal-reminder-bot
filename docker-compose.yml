@@ -12,12 +12,9 @@ services:
       - CHAT_ID=6501087487
       - PORT=3000
     volumes:
-      - goals-data:/app/goals.json
-      - history-data:/app/history.json
+      - appdata:/app/data
     restart: unless-stopped
 
 volumes:
-  goals-data:
-    driver: local
-  history-data:
+  appdata:
     driver: local
