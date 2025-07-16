@@ -30,6 +30,15 @@ const writeGoals = (goals) => {
   fs.writeFileSync(goalsPath, JSON.stringify(goals, null, 2));
 };
 
+const quotes = [
+  "Believe you can and you're halfway there.",
+  "Start where you are. Use what you have. Do what you can.",
+  "Don't watch the clock; do what it does. Keep going.",
+  "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+  "Your limitation—it's only your imagination."
+];
+
+// Manual commands
 bot.onText(/\/goals/, (msg) => {
   const goals = readGoals().filter(g => !g.completed);
   const text = goals.length
@@ -46,6 +55,7 @@ bot.onText(/\/addgoal (.+)\|(.+)/, (msg, match) => {
   bot.sendMessage(chatId, `✅ Added: [${category.trim()}] ${text.trim()}`);
 });
 
+// Category-specific fixed daily reminders
 const sendReminder = (category) => {
   const goal = readGoals().find(g => g.category === category && !g.completed);
   if (goal) {
@@ -57,6 +67,17 @@ cron.schedule('0 9 * * *', () => sendReminder("🏃 Health"));
 cron.schedule('0 14 * * *', () => sendReminder("💼 Work"));
 cron.schedule('0 20 * * *', () => sendReminder("👤 Personal"));
 
+// 🔁 New: Hourly full pending goals reminder with quote
+cron.schedule('0 * * * *', () => {
+  const goals = readGoals().filter(g => !g.completed);
+  if (goals.length === 0) return;
+
+  const text = goals.map(g => `- [${g.category}] ${g.text}`).join('\n');
+  const quote = quotes[Math.floor(Math.random() * quotes.length)];
+  bot.sendMessage(chatId, `🕐 *Hourly Reminder*\n${text}\n\n💡 _"${quote}"_`, { parse_mode: 'Markdown' });
+});
+
+// Show chat ID on any incoming message
 bot.on('message', (msg) => {
   console.log('📥 Chat ID:', msg.chat.id);
 });
