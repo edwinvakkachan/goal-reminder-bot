@@ -15,8 +15,8 @@ services:
       - appdata:/app/data
     restart: unless-stopped
 
-  bot:
-    build: ./bot
+  telegrambot:
+    build: ./telegrambot
     container_name: goal-reminder-bot
     environment:
       - TZ=Asia/Kolkata
