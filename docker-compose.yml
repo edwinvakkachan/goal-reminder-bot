@@ -1,22 +1,30 @@
 version: '3.9'
 
 services:
-  goalbot:
-    build: .
-    container_name: goal-reminder-bot
+  web:
+    build: ./web
+    container_name: goal-reminder-web
     ports:
       - "3000:3000"
     environment:
       - TZ=Asia/Kolkata
-      - BOT_TOKEN=7576181421:AAH_pmVimWYuAdW9KSZ94AcuBhtG504XmrA
-      - CHAT_ID=6501087487
-      - PORT=3000
       - ADMIN_USER=admin
       - ADMIN_PASS=password
+      - PORT=3000
+    volumes:
+      - appdata:/app/data
+    restart: unless-stopped
+
+  bot:
+    build: ./bot
+    container_name: goal-reminder-bot
+    environment:
+      - TZ=Asia/Kolkata
+      - BOT_TOKEN=7576181421:AAH_pmVimWYuAdW9KSZ94AcuBhtG504XmrA
+      - CHAT_ID=6501087487
     volumes:
       - appdata:/app/data
     restart: unless-stopped
 
 volumes:
   appdata:
-    driver: local
