@@ -1,3 +1,4 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
@@ -7,8 +8,14 @@ const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const goalsPath = path.join(__dirname, 'goals.json');
-const historyPath = path.join(__dirname, 'history.json');
+
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir);
+}
+
+const goalsPath = path.join(dataDir, 'goals.json');
+const historyPath = path.join(dataDir, 'history.json');
 
 app.use(express.json());
 app.use(express.static('public'));
